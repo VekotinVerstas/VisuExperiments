@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Smoothie Chart Example</title>
+    <script type="text/javascript" src="plotly-latest.min.js"></script>
+    <script type="text/javascript" src="mqttws31.min.js"></script>
+
+<style type="text/css">
+#graph {
+  width: 100%;
+  height: 800px;
+}
+
+</style>
+<script>
+
+</script>
+
+  </head>
+  <body>
+
+    <div id="graph"></div>
+
+
+    <script type="text/javascript">
+
+function rand() {
+  return Math.random();
+}
+
+var time = new Date();
+
+var trace1 = {
+  x: [],
+  y: [],
+  type: 'scatter'
+};
+
+var trace2 = {
+  x: [],
+  y: [],
+  xaxis: 'x2',
+  yaxis: 'y2',
+  type: 'scatter'
+};
+
+var trace3 = {
+  x: [],
+  y: [],
+  xaxis: 'x3',
+  yaxis: 'y3',
+  type: 'scatter'
+};
+
+var trace4 = {
+  x: [],
+  y: [],
+  xaxis: 'x4',
+  yaxis: 'y4',
+  type: 'scatter'
+};
+
+var data = [trace1, trace2, trace3, trace4];
+
+var layout = {
+    xaxis: {
+        domain: [0, 0.45],
+        type: 'date'
+    },
+    yaxis: {
+        domain: [0, 0.45]
+    },
+    xaxis2: {
+        domain: [0.55, 1],
+        type: 'date'
+    },
+    yaxis2: {
+        domain: [0, 0.45],
+        anchor: 'x2'
+    },
+    xaxis3: {
+        domain: [0, 0.45],
+        type: 'date',
+        anchor: 'y3'
+    },
+    yaxis3: {
+        domain: [0.55, 1]
+    },
+    xaxis4: {
+        domain: [0.55, 1],
+        type: 'date',
+        anchor: 'y4'
+    },
+    yaxis4: {
+        domain: [0.55, 1],
+        anchor: 'x4'
+    }
+};
+
+Plotly.plot('graph', data, layout);
+
+
+// Create a client instance
+// client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+client = new Paho.MQTT.Client("192.168.0.40", 9001, "clientId"+Math.random());
+
+// set callback handlers
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+
+// connect the client
+client.connect({onSuccess:onConnect});
+
+// called when the client connects
+function onConnect() {
+  // Once a connection has been made, make a subscription and send a message.
+  console.log("onConnect");
+  client.subscribe("moi");
+  message = new Paho.MQTT.Message("Hello");
+  message.destinationName = "World";
+  //client.send(message);
+}
+
+// called when the client loses its connection
+function onConnectionLost(responseObject) {
+  if (responseObject.errorCode !== 0) {
+    console.log("onConnectionLost:"+responseObject.errorMessage);
+  }
+}
+
+// called when a message arrives
+function onMessageArrived(message) {
+  console.log("onMessageArrived:"+message.payloadString);
+  var  data = JSON.parse(message.payloadString);
+  //console.log(data);
+  var time = new Date();
+  var olderTime = time.setMinutes(time.getMinutes() - 3);
+  var futureTime = time.setMinutes(time.getMinutes() + 3);
+  var minuteView = layout;
+  minuteView.xaxis.range = [olderTime,futureTime];
+  minuteView.xaxis2.range = [olderTime,futureTime];
+  minuteView.xaxis3.range = [olderTime,futureTime];
+  minuteView.xaxis4.range = [olderTime,futureTime];
+
+  Plotly.relayout('graph', minuteView);
+  var update = {
+    x:  [[time],[time],[time],[time]],
+    y: [[data.temp], [data.temp], [data.temp], [data.temp]]
+  };
+  var update = {
+    x: [[time], [time], [time], [time]],
+    y: [[rand()], [rand()], [rand()], [rand()]]
+  };
+  //Plotly.extendTraces('graph', update, [0, 1, 2, 3]);
+  var update = {
+    x: [[time]],
+    y: [[rand()]]
+  };
+  Plotly.extendTraces('graph', update, [3]);
+    /*
+  */
+}
+      
+    </script>
+
+  </body>
+</html>
