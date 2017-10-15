@@ -1,38 +1,31 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Smoothie Chart Example</title>
-    <script type="text/javascript" src="plotly-latest.min.js"></script>
-    <script type="text/javascript" src="mqttws31.min.js"></script>
+<head>
+<title>Real time Plotly javascript mqtt example</title>
+<meta charset="UTF-8">
+<script type="text/javascript" src="plotly-latest.min.js"></script>
+<script type="text/javascript" src="mqttws31.min.js"></script>
 
 <style type="text/css">
 #graph {
   width: 100%;
   height: 800px;
 }
-
 </style>
-<script>
 
-</script>
+</head>
 
-  </head>
-  <body>
+<body>
 
-    <div id="graph"></div>
+<div id="graph"></div>
 
 
-    <script type="text/javascript">
-
-function rand() {
-  return Math.random();
-}
-
-var time = new Date();
+<script type="text/javascript">
 
 var trace1 = {
   x: [],
   y: [],
+  name: 'IR Lämpötila °C',
   type: 'scatter'
 };
 
@@ -41,6 +34,7 @@ var trace2 = {
   y: [],
   xaxis: 'x2',
   yaxis: 'y2',
+  name: 'Valoisuus lx',
   type: 'scatter'
 };
 
@@ -49,6 +43,16 @@ var trace3 = {
   y: [],
   xaxis: 'x3',
   yaxis: 'y3',
+  name: 'Ilmankosteus %',
+  type: 'scatter'
+};
+
+var trace3b = {
+  x: [],
+  y: [],
+  xaxis: 'x3',
+  yaxis: 'y3',
+  name: 'Ilman lämpötila °C',
   type: 'scatter'
 };
 
@@ -57,10 +61,29 @@ var trace4 = {
   y: [],
   xaxis: 'x4',
   yaxis: 'y4',
+  name: 'Väri R',
   type: 'scatter'
 };
 
-var data = [trace1, trace2, trace3, trace4];
+var trace4b = {
+  x: [],
+  y: [],
+  xaxis: 'x4',
+  yaxis: 'y4',
+  name: 'Väri G',
+  type: 'scatter'
+};
+
+var trace4c = {
+  x: [],
+  y: [],
+  xaxis: 'x4',
+  yaxis: 'y4',
+  name: 'Väri B',
+  type: 'scatter'
+};
+
+var data = [trace1, trace2, trace3, trace3b, trace4, trace4b, trace4c];
 
 var layout = {
     xaxis: {
@@ -68,14 +91,18 @@ var layout = {
         type: 'date'
     },
     yaxis: {
-        domain: [0, 0.45]
+        title: "IR lämpötila",
+        domain: [0, 0.45],
+        range: [0, 100]
     },
     xaxis2: {
         domain: [0.55, 1],
         type: 'date'
     },
     yaxis2: {
+        title: "Valoisuus",
         domain: [0, 0.45],
+        range: [0, 100],
         anchor: 'x2'
     },
     xaxis3: {
@@ -84,7 +111,9 @@ var layout = {
         anchor: 'y3'
     },
     yaxis3: {
-        domain: [0.55, 1]
+        title: "Kosteus ja lämpö",
+        domain: [0.55, 1],
+        range: [0, 100]
     },
     xaxis4: {
         domain: [0.55, 1],
@@ -92,7 +121,9 @@ var layout = {
         anchor: 'y4'
     },
     yaxis4: {
+        title: "Valon väri ja ele",
         domain: [0.55, 1],
+        range: [0, 100],
         anchor: 'x4'
     }
 };
@@ -126,13 +157,14 @@ function onConnectionLost(responseObject) {
   if (responseObject.errorCode !== 0) {
     console.log("onConnectionLost:"+responseObject.errorMessage);
   }
+  //client.connect({onSuccess:onConnect});
 }
 
 // called when a message arrives
 function onMessageArrived(message) {
   console.log("onMessageArrived:"+message.payloadString);
   var  data = JSON.parse(message.payloadString);
-  //console.log(data);
+  console.log(data);
   var time = new Date();
   var olderTime = time.setMinutes(time.getMinutes() - 3);
   var futureTime = time.setMinutes(time.getMinutes() + 3);
@@ -143,22 +175,21 @@ function onMessageArrived(message) {
   minuteView.xaxis4.range = [olderTime,futureTime];
 
   Plotly.relayout('graph', minuteView);
-  var update = {
-    x:  [[time],[time],[time],[time]],
-    y: [[data.temp], [data.temp], [data.temp], [data.temp]]
-  };
-  var update = {
-    x: [[time], [time], [time], [time]],
-    y: [[rand()], [rand()], [rand()], [rand()]]
-  };
-  //Plotly.extendTraces('graph', update, [0, 1, 2, 3]);
-  var update = {
-    x: [[time]],
-    y: [[rand()]]
-  };
-  Plotly.extendTraces('graph', update, [3]);
-    /*
-  */
+  if (data.sensor == 'humitemp') {
+    var update = {
+      x: [[time], [time]],
+      y: [[data.data[1]], [data.data[3]]]
+    };
+    Plotly.extendTraces('graph', update, [2,3]);
+  }
+  if (data.sensor == 'irtemp') {
+    var update = {
+      x: [[time]],
+      y: [[data.data[1]]]
+    };
+    Plotly.extendTraces('graph', update, [0]);
+  }
+
 }
       
     </script>
