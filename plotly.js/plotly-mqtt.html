@@ -172,11 +172,24 @@ client = new Paho.MQTT.Client(clientData.ws.hostname, Number(clientData.ws.port)
 // set callback handlers
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
-client.onerror=function(event){
+client.onerror = function(event){
     console.log("Error " + event);
 }
 
 MqttConnect();
+var DATA_MAX_AGE = 60 * 1000; /* ms */
+var last_data = new Date;
+console.log(last_data);
+
+
+// Check every now if we get data from websocket
+setInterval(function(){
+    var age = (new Date) - last_data;
+    console.log("Latest data is " + age + " ms old");
+    if (age > DATA_MAX_AGE) {
+       location.reload();
+    }
+}, 10000);
 
 function MqttConnect() {
     // connect the client
@@ -234,6 +247,7 @@ function onConnectionLost(responseObject) {
 
 // called when a message arrives
 function onMessageArrived(message) {
+  last_data = new Date;
   console.log("onMessageArrived:"+message.payloadString);
   var  data = JSON.parse(message.payloadString);
   console.log(data);
