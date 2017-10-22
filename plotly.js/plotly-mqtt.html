@@ -249,8 +249,15 @@ function onConnectionLost(responseObject) {
 function onMessageArrived(message) {
   last_data = new Date;
   console.log("onMessageArrived:"+message.payloadString);
-  var  data = JSON.parse(message.payloadString);
-  console.log(data);
+  var sdata = JSON.parse(message.payloadString);
+  // console.log(data);
+  // Remove oldest points, keep 500 latest
+  for (i = 0; i < data.length; i++) {
+      if (data[i].y.length > 500) {
+          data[i].y.shift();
+          data[i].x.shift();
+      }
+  }
   var time = new Date();
   var olderTime = time.setMinutes(time.getMinutes() - 3);
   var futureTime = time.setMinutes(time.getMinutes() + 3);
@@ -261,31 +268,31 @@ function onMessageArrived(message) {
   minuteView.xaxis4.range = [olderTime,futureTime];
 
   Plotly.relayout('graph', minuteView);
-  if (data.sensor == 'humitemp') {
+  if (sdata.sensor == 'humitemp') {
     var update = {
       x: [[time], [time]],
-      y: [[data.data[1]], [data.data[3]]]
+      y: [[sdata.data[1]], [sdata.data[3]]]
     };
     Plotly.extendTraces('graph', update, [2,3]);
   }
-  if (data.sensor == 'irtemp') {
+  if (sdata.sensor == 'irtemp') {
     var update = {
       x: [[time]],
-      y: [[data.data[1]]]
+      y: [[sdata.data[1]]]
     };
     Plotly.extendTraces('graph', update, [0]);
   }
-  if (data.sensor == 'lux') {
+  if (sdata.sensor == 'lux') {
     var update = {
       x: [[time]],
-      y: [[data.data[1]]]
+      y: [[sdata.data[1]]]
     };
     Plotly.extendTraces('graph', update, [1]);
   }
-  if (data.sensor == 'rgbgest') {
+  if (sdata.sensor == 'rgbgest') {
     var update = {
       x: [[time], [time], [time]],
-      y: [[data.data[1]], [data.data[3]], [data.data[5]]]
+      y: [[sdata.data[1]], [sdata.data[3]], [sdata.data[5]]]
     };
     Plotly.extendTraces('graph', update, [4,5,6]);
   }
